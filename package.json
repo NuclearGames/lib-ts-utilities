@@ -1,0 +1,30 @@
+{
+  "name": "@nucleargames/lib-ts-utilities",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nucleargames/lib-ts-utilities.git"
+  },
+  "files" : [
+    "/lib"
+  ],
+  "publishConfig": {
+     "@nucleargames:registry": "https://npm.pkg.github.com"
+  },
+
+  "scripts": {
+    "build": "tsc",
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+
+  "dependencies": {
+    "@types/node": "^18.11.9"
+  },
+  "devDependencies": {
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}
