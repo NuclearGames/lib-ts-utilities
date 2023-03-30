@@ -103,4 +103,9 @@ dist
 # TernJS port file
 .tern-port
 
+# Lib
 *lib/*
+
+# Generated proto except folder
+*src/proto/*
+!*src/proto/.gitkeep
