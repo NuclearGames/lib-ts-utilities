@@ -1,17 +1,19 @@
 // import { Server, ServerCredentials } from "@grpc/grpc-js";
 // import { GrpcHealthChecks, HealthResult } from "./grpc-health-checks/gprc-health-checks";
 
+// let someCheckResult = true;
+
 // enum HealthChecksIds {
 //     SomeCheck = 1,
 //     AnotherCheck = 2,
 // }
 
 // // Добавляем проверки.
-// GrpcHealthChecks.setHealthCheck(HealthChecksIds.SomeCheck, async () => true);
+// GrpcHealthChecks.setHealthCheck(HealthChecksIds.SomeCheck, async () => someCheckResult);
 // GrpcHealthChecks.setHealthCheck(HealthChecksIds.AnotherCheck, async () => true, new Set(["tag1", "tag2"]));
 
 // // Добавляем сервисы.
-// GrpcHealthChecks.setServiceCheckFilter("testS", (r : HealthResult) => r.id == HealthChecksIds.SomeCheck);
+// GrpcHealthChecks.setServiceCheckFilter("testS", (r : HealthResult) => true);
 
 // const server = new Server();
 
@@ -25,3 +27,15 @@
 //     // Запускаем цикл проверок.
 //     GrpcHealthChecks.startLoop();
 // }); 
+
+
+// async function test() {
+//     await delay(10000);
+//     someCheckResult = false;
+// }
+
+// test();
+
+// async function delay(ms: number) {
+//     return new Promise( resolve => setTimeout(resolve, ms) );
+// }
