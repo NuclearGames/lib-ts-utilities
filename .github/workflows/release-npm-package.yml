@@ -31,6 +31,9 @@ jobs:
     - name: Prepare
       run: npm ci
 
+    - name: Proto Generation
+      run: npm run proto-gen
+
     - name: Build
       run: npm run build
 
