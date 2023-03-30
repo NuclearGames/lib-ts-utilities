@@ -1,0 +1,45 @@
+name: Node.js Package
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Verify commit exists in origin/main
+      run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+        git branch --remote --contains | grep origin/main
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        registry-url: https://npm.pkg.github.com/
+      if: ${{ success() }}
+
+    - name: Prepare
+      run: npm ci
+
+    - name: Proto Generation
+      run: npm run proto-gen
+
+    - name: Build
+      run: npm run build
+
+    - name: Publish
+      run: npm publish
+
+    env:
+      NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      GITHUB_REGISTRY_TOKEN: ${{secrets.GITHUB_TOKEN}}

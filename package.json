@@ -1,0 +1,34 @@
+{
+  "name": "@nucleargames/lib-ts-utilities",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nucleargames/lib-ts-utilities.git"
+  },
+  "files": [
+    "/lib"
+  ],
+  "publishConfig": {
+    "@nucleargames:registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsc && copyfiles -f src/proto/*.* lib/proto",
+    "start": "node .",
+    "proto-gen": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:src/proto --grpc_out=grpc_js:src/proto --ts_out=grpc_js:src/proto -I ./Protos ./Protos/*.proto",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.8.13",
+    "@types/google-protobuf": "^3.15.6",
+    "@types/node": "^18.11.9"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "grpc-tools": "^1.12.4",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}
