@@ -70,7 +70,7 @@ export class GrpcHealthService {
 		const service: string = call.request.getService();
 		const response: HealthCheckResponse = new HealthCheckResponse();
 		let status = this.getServiceStatus(service);
-		if (!status || status == HealthCheckResponse.ServingStatus.SERVICE_UNKNOWN) {
+		if (status == HealthCheckResponse.ServingStatus.SERVICE_UNKNOWN) {
 			// Этот метод предполагает возвращение ошибки, если сервис не найден.
 			callback(this.createNotFoundError(), null);
 			return;
@@ -88,7 +88,7 @@ export class GrpcHealthService {
 		let watchError : Error | null = null;
 
 		const iteration = () => {
-			let status = this.getServiceStatus(service) ?? HealthCheckResponse.ServingStatus.SERVICE_UNKNOWN;
+			let status = this.getServiceStatus(service);
 			let watchStatus = watchStatusMap.get(service);
 	
 			if (watchError != null) {

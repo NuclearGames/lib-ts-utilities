@@ -19,8 +19,29 @@ export class HealthResult {
     ) { }
 }
 
+/** Настройки. */
+export class HealthChecksOptions {
+    constructor(
+        /** Время до первой проверки. Миллисекунды. */
+        public readonly delay : number,
+
+        /** Время между проверками. Миллисекунды. */
+        public readonly period : number,
+    ){}
+}
+
 /**
- * Проверка здоровья.
+ * Проверки здоровья.  
+ * 
+ * Должны быть добавлены проверки и сервисы.  
+ * Каждый сервис имеет фильтр, который указывает результаты каких проверок использовать.  
+ * Сервис по умолчанию (с путым именем) использует все проверки. Может быть переопределен:  
+ * ``` GrpcHealthChecks.setServiceCheck("", (r : HealthResult) => true); ```
+ * 
+ * Первая проверка осуществляется сразу при запуске цикла проверок.  
+ * Следующая проверка осуществялется с задержкой (по умолчанию 5 секунд).  
+ * Последующие проверки осуществляются с заданным периодом (по умолчанию 30 секунд).  
+ * Время проверок задается в настройках.  
  * 
  * Пример использования:
  * ```
@@ -30,6 +51,9 @@ export class HealthResult {
  *      AnotherCheck = 2,
  *  }
  *
+ *  // Перезаписываем настройки (опционально).
+ *  GrpcHealthChecks.useOptions(new HealthChecksOptions(5000, 30000));
+ * 
  *  // Добавляем проверки.
  *  GrpcHealthChecks.setHealthCheck(HealthChecksIds.SomeCheck, async () => true);
  *  GrpcHealthChecks.setHealthCheck(HealthChecksIds.AnotherCheck, async () => true, new Set(["tag1", "tag2"]));
@@ -47,15 +71,23 @@ export class HealthResult {
  *  server.bindAsync('0.0.0.0:4001', ServerCredentials.createInsecure(), () => {
  *      server.start();
  *      console.log('server is running on 0.0.0.0:4001');
+ * 
+ *      // Запускаем цикл проверок.
+ *      GrpcHealthChecks.startChecks();
  *  }); 
  * ```
  */
-export abstract class GrpcHealthChecks {
+export abstract class GrpcHealthChecks {  
+    /** Пустой набор тегов. */
+    private static emptyTagSet = new Set<string>();
+
     /** Проверки здоровья. */
     private static healthChecks: Map<number, HealthCheck> = new Map();
 
     /** Набор сервисов и их фильров. */
-    private static serviceCheckFilterMap: Map<string, (r: HealthResult) => boolean> = new Map();
+    private static serviceCheckFilterMap: Map<string, (r: HealthResult) => boolean> = new Map([
+        ["", () => true]
+    ]);
 
     /** Результаты проверок. */
     private static checkResultsMap: Map<number, HealthResult> = new Map();
@@ -66,8 +98,22 @@ export abstract class GrpcHealthChecks {
     /** Сервис. */
     private static serivce: GrpcHealthService;
 
-    /** Пустой набор тегов. */
-    private static emptyTagSet = new Set<string>();
+    /** Объект настроек. */
+    private static options : HealthChecksOptions = new HealthChecksOptions(5000, 30000);
+
+    /** Запущен ли цикл проверок. */
+    private static loopStarted = false;
+
+    /** Выполняются ли в данный момент проверки. */
+    private static checksPerforming = false;
+
+    /**
+     * Устанавливает настройки.
+     * @param options 
+     */
+    public static useOptions(options : HealthChecksOptions) {
+        this.options = options;
+    }
 
     /**
      * Устанавливает проверку под указанным идентификатором.
@@ -98,17 +144,58 @@ export abstract class GrpcHealthChecks {
         this.serivce.map(server);
     }
 
-    /** Возвращает статус сервиса. */
+    /** Запускает проверки. */
+    public static startLoop() {
+        if(this.loopStarted){
+            throw new Error("GrpcHealthChecks loop already started.");
+        }
+        this.loopStarted = true;
+        this.runLoop();
+    }
+
+    /**
+     * Возвращает статус сервиса.
+     * Если сервис не зарегистрирован, то возвращается SERVICE_UNKNOWN.  
+     * Если сервис зарегистрирован, но не было ни одной проверки, то возвращается UNKNOWN.  
+     * Иначе - состояние сервиса.
+     * @param service 
+     * @returns 
+     */
     public static getServiceStatus(service: string): HealthCheckResponse.ServingStatus {
-        return this.serviceStatusMap.get(service) ?? HealthCheckResponse.ServingStatus.SERVICE_UNKNOWN;
+        const status = this.serviceStatusMap.get(service);
+        if (status == undefined) {
+            return this.serviceCheckFilterMap.has(service) 
+                ? HealthCheckResponse.ServingStatus.UNKNOWN 
+                : HealthCheckResponse.ServingStatus.SERVICE_UNKNOWN;
+        }
+        return status;
     }
 
     private static setServiceStatus(service: string, status: HealthCheckResponse.ServingStatus) {
         this.serviceStatusMap.set(service, status);
     }
 
-    private static async runChecks() {
+    private static async runLoop() {
+        // Начальная проверка.
+        this.tryPerformChecks();
+
+        // Начальная задержка.
+        await new Promise(resolve => setTimeout(resolve, this.options.delay));
+
+        // Запускаем цикл проверок. Первая проверка выполняется сразу.
+        const interval = setInterval(this.tryPerformChecks.bind(this), this.options.period);
+        this.tryPerformChecks();
+    }
+
+    private static async tryPerformChecks() {
+        // Если проверки уже выполняются, то пропускаем.
+        if (this.checksPerforming) {
+            return;
+        }
+        this.checksPerforming = true;
+
         // Прогоняем все проверки.
+        // Последовательно, потому что лучше долго, чем сильно грузить систему.
         for (const [id, check] of this.healthChecks) {
             const status = await check.check();
             this.checkResultsMap.set(id, new HealthResult(id, status, check.tags));
@@ -131,5 +218,7 @@ export abstract class GrpcHealthChecks {
 
             this.setServiceStatus(service, status);
         }
+
+        this.checksPerforming = false;
     }
 }
