@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.8.13",
+    "@nucleargames/lib-ts-multiprocess": "^1.0.2",
+    "@nucleargames/lib-warplane-mm-arp-proto": "^1.0.1",
     "@types/google-protobuf": "^3.15.6",
     "@types/node": "^18.11.9"
   },
