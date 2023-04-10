@@ -1,7 +1,7 @@
 import { ArpServiceStatus } from "@nucleargames/lib-warplane-mm-arp-proto"
-import { ArpServiceStatusChangeArgs } from "./arp-client-task";
+import { ArpServiceStatusChangeArgs } from "./arp-integration-client";
 import { EventSrc, IEvent, ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
-import { ArpIntegration } from "./arp-client";
+import { ArpIntegration } from "./arp-integration";
 
 export class ServiceStatusChangeEvent {
     constructor(
@@ -73,10 +73,13 @@ export class ServiceStatusCollection {
     /**
      * Обновляет значение из сообщения, если оно соответсвует нужному коду.
      * @param message 
+     * @returns True - если передано сообщение с состоянием сервиса. False - иначе.
      */
-    public tryUpdateFromMessage(message: ThreadMessage): void {
+    public tryUpdateFromMessage(message: ThreadMessage): boolean {
         if (message.code == ArpIntegration.getOptions().serviceStatusChangeMessageCode) {
             this.updateFromMessage(message.args);
+            return true;
         }
+        return false;
     }
 }

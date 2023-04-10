@@ -3,8 +3,8 @@
 import { Server, ServerCredentials } from "@grpc/grpc-js";
 import { GrpcHealthChecks, HealthResult } from "./grpc-health-checks/gprc-health-checks";
 import { ThreadManager } from "@nucleargames/lib-ts-multiprocess";
-import { ArpClientTask, ArpClientTaskArgs } from "./arp-integration/arp-client-task";
-import { ArpIntegration, ArpOptions } from "./arp-integration/arp-client";
+import { ArpIntegrationClient, ArpIntegrationClientArgs } from "./arp-integration/arp-integration-client";
+import { ArpIntegration, ArpOptions } from "./arp-integration/arp-integration";
 import { LockBoxConfigurator, LockBoxConfiguratorOptions, LockBoxConfiguratorUtilities } from "@nucleargames/yandex-cloud-lockbox-lib";
 
 // Название этого сервиса.
@@ -31,7 +31,7 @@ enum HealthChecksIds {
 
 // Инициализация процессов.
 ThreadManager.setIndexFile("./lib/index.js");
-ThreadManager.registerTask(TaskIds.ArpClient, ArpClientTask);
+ThreadManager.registerTask(TaskIds.ArpClient, ArpIntegrationClient);
 
 // Инициализация ARP.
 ArpIntegration.useOptions(new ArpOptions(
@@ -78,7 +78,7 @@ ThreadManager.runApp(async () => {
         GrpcHealthChecks.startLoop();
 
         // Запускаем ARP клиент.
-        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpClientTaskArgs("127.0.0.1:3000", "Core"));
+        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpIntegrationClientArgs("127.0.0.1:3000", "Core"));
 
         // Запускаем тестовую задачу на процессе.
         threadMap.get(ThreadIds.Test)!.runTask(TaskIds.Test, null!);

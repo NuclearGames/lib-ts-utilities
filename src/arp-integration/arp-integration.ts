@@ -1,6 +1,8 @@
 export class ArpOptions {
     constructor(
-        readonly serviceStatusChangeMessageCode: number,
+        public readonly arpClientThreadId : number,
+        public readonly serviceStatusChangeMessageCode: number,
+        public readonly getCurrentStatusesMessageCode : number,
         public readonly threadRequiredServicesMap : Map<number, Set<string>>) { }
 }
 
