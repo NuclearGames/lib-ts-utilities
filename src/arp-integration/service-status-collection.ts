@@ -1,7 +1,7 @@
 import { ArpServiceStatus } from "@nucleargames/lib-warplane-mm-arp-proto"
-import { ArpServiceStatusChangeArgs } from "./arp-integration-client";
 import { EventSrc, IEvent, ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
 import { ArpIntegration } from "./arp-integration";
+import { ArpServiceStatusChangeArgs } from "./arp-integration-common";
 
 export class ServiceStatusChangeEvent {
     constructor(
@@ -15,10 +15,8 @@ export class ServiceStatusCollection {
     private readonly _statusMap: Map<string, ArpServiceStatus>;
 
     constructor() {
-        // TODO: вытащить ThreadID из ThreadManager - добавить соотвествующий метод в пакет.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
         // Ставим требуемым сервисам значение по умолчанию.
-        const services = ArpIntegration.getOptions().threadRequiredServicesMap.get(1);
+        const services = ArpIntegration.getOptions().threadRequiredServicesMap.get(ThreadManager.getThreadId());
         if(services) {  
             for (const service of services) {
                 this._statusMap.set(service, ArpServiceStatus.NOTSERVING);

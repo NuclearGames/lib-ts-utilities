@@ -1,5 +1,5 @@
 import { credentials } from "@grpc/grpc-js";
-import { ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
+import { ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
 import { ArpClient, ArpHealthStateSubscribeRequest, ArpHealthStateSubscribeResponse, ArpServiceCollection, ArpServiceStatus, ArpWakeUpNotifyRequest } from "@nucleargames/lib-warplane-mm-arp-proto";
 import { ArpIntegration } from "./arp-integration";
 import { ServiceStatusCollection } from "./service-status-collection";
@@ -117,7 +117,7 @@ export class ArpIntegrationClient {
 
     private sendStatuses(threadId: number) {
         // Себе не отправляем.
-        if(this._args.threadId == threadId) {
+        if(ThreadManager.getThreadId() == threadId) {
             return;
         }
 
@@ -141,6 +141,6 @@ export class ArpIntegrationClient {
         if (message.code == ArpIntegration.getOptions().getCurrentStatusesMessageCode) {
             this.sendStatuses(message.senderThreadId);
         }
-        console.log(`    [${this._args.threadId}] Got message from ${message.senderThreadId}. Code: ${message.code}; Args: ${message.args}`);
+        console.log(`    [${ThreadManager.getThreadId()}] Got message from ${message.senderThreadId}. Code: ${message.code}; Args: ${message.args}`);
     }
 }
