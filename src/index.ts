@@ -3,10 +3,11 @@
 import { Server, ServerCredentials } from "@grpc/grpc-js";
 import { GrpcHealthChecks } from "./grpc-health-checks/gprc-health-checks";
 import { ThreadManager } from "@nucleargames/lib-ts-multiprocess";
-import { ArpIntegrationClient, ArpIntegrationClientArgs } from "./arp-integration/arp-integration-client";
+import {  ArpIntegrationClientArgs } from "./arp-integration/arp-integration-client";
 import { ArpIntegration, ArpOptions } from "./arp-integration/arp-integration";
 import { LockBoxConfigurator, LockBoxConfiguratorOptions, LockBoxConfiguratorUtilities } from "@nucleargames/yandex-cloud-lockbox-lib";
-import { TestTask } from "./__example__/test-task"
+import { TestTask } from "./__example__/test-task";
+import { TestArpTask } from "./__example__/test-arp-task";
 import { ArpServiceMapSettings } from "./arp-integration/arp-service-map-settings";
 
 // Название этого сервиса.
@@ -36,7 +37,7 @@ enum HealthChecksIds {
 
 // Инициализация процессов.
 ThreadManager.setIndexFile("./lib/index.js");
-ThreadManager.registerTask(TaskIds.ArpClient, ArpIntegrationClient);
+ThreadManager.registerTask(TaskIds.ArpClient, TestArpTask);
 ThreadManager.registerTask(TaskIds.Test, TestTask);
 
 // Инициализация ARP.

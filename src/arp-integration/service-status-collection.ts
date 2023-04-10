@@ -1,5 +1,5 @@
 import { ArpServiceStatus } from "@nucleargames/lib-warplane-mm-arp-proto"
-import { EventSrc, IEvent, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
+import { EventSrc, IEvent, ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
 import { ArpIntegration } from "./arp-integration";
 import { ArpServiceStatusChangeArgs } from "./arp-integration-common";
 

@@ -114,7 +114,7 @@ export class ArpIntegrationClient {
 
     /** При получении новых данных по HealthStateSubscribe стриму. */
     private onHealthStateSubscribeReceive(response: ArpHealthStateSubscribeResponse): void {
-        console.log(` HealthStateSubscribe: ${response.getId()} - ${response.getStatus()}`);
+        //console.log(` HealthStateSubscribe: ${response.getId()} - ${response.getStatus()}`);
 
         // Устанавилваем значение в коллекцию.
         if(this.collection.contains(response.getId())) {
