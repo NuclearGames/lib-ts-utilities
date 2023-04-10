@@ -11,8 +11,8 @@ export class ServiceStatusChangeEvent {
 }
 
 export class ServiceStatusCollection {
-    private readonly _onStatusChanged: EventSrc<ServiceStatusChangeEvent>;
-    private readonly _statusMap: Map<string, ArpServiceStatus>;
+    private readonly _onStatusChanged = new EventSrc<ServiceStatusChangeEvent>;
+    private readonly _statusMap = new Map<string, ArpServiceStatus>;
 
     constructor() {
         // Ставим требуемым сервисам значение по умолчанию.
@@ -26,7 +26,7 @@ export class ServiceStatusCollection {
 
     /** Событие: при изменении статуса сервиса. */
     public get onStatusChanged(): IEvent<ServiceStatusChangeEvent> {
-        return this._onStatusChanged;
+        return this._onStatusChanged.expose();
     }
 
     /**

@@ -12,7 +12,7 @@ export class TestArpTask implements IThreadTask {
         // Если аргументы таска включает не только аргументы ARP,
         // то доставать аргументы ARP из общего объекта args.
         // Можно выполнять параллельно с другой логикой.
-        await this._arpClient.perform(new ArpTaskIntegrationArgs(context.sendMessage, context.hasMessagePort), args);
+        await this._arpClient.perform(new ArpTaskIntegrationArgs(context.sendMessage.bind(context), context.hasMessagePort.bind(context)), args);
         context.markFinished();
     }
 

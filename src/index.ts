@@ -6,22 +6,26 @@ import { ThreadManager } from "@nucleargames/lib-ts-multiprocess";
 import { ArpIntegrationClient, ArpIntegrationClientArgs } from "./arp-integration/arp-integration-client";
 import { ArpIntegration, ArpOptions } from "./arp-integration/arp-integration";
 import { LockBoxConfigurator, LockBoxConfiguratorOptions, LockBoxConfiguratorUtilities } from "@nucleargames/yandex-cloud-lockbox-lib";
+import { TestTask } from "./__example__/test-task"
+import { ArpServiceMapSettings } from "./arp-integration/arp-service-host-map";
 
 // Название этого сервиса.
 const SERVICE_ID = "IncomeDbGateway";
+const CORE_SERVICE_ID = "Core";
 
 export enum ThreadIds {
-    ArpClient = 0,
-    Test = 1,
+    ArpClient = 1,
+    Test = 2
 }
 
 export enum TaskIds {
     ArpClient = 1,
-    Test
+    Test = 2
 }
 
 export enum MessageCodes {
-    ArpServiceStatusChange = 0
+    ArpServiceStatusChange = 0,
+    GetCurrentStatuses = 1
 }
 
 enum HealthChecksIds {
@@ -32,10 +36,13 @@ enum HealthChecksIds {
 // Инициализация процессов.
 ThreadManager.setIndexFile("./lib/index.js");
 ThreadManager.registerTask(TaskIds.ArpClient, ArpIntegrationClient);
+ThreadManager.registerTask(TaskIds.Test, TestTask);
 
 // Инициализация ARP.
 ArpIntegration.useOptions(new ArpOptions(
+    ThreadIds.ArpClient,
     MessageCodes.ArpServiceStatusChange, 
+    MessageCodes.GetCurrentStatuses,
     new Map<number, Set<string>>([
         [ThreadIds.Test, new Set<string>(["Core", "IncomeDbGateway"])]
     ])));
@@ -56,7 +63,9 @@ ThreadManager.runApp(async () => {
     // Качаем лутбокс.
     LockBoxConfigurator.useOptions(new LockBoxConfiguratorOptions("WarplaneMM", "-"));
     await LockBoxConfiguratorUtilities.configureYandexCloudSecretsDefault("./.secrets/example.appsettings.json");
-    // ToDo: вытянуть мапу сервисов.
+    const serviceAddressMap = new ArpServiceMapSettings(LockBoxConfigurator.getSectionEntriesMap("ServiceMap"));
+    const serverAddress = serviceAddressMap.getRequiredServiceHost(SERVICE_ID)!;
+    const coreAddress = serviceAddressMap.getRequiredServiceHost(CORE_SERVICE_ID)!;
 
     // Добавляем проверки.
     GrpcHealthChecks.setHealthCheck(HealthChecksIds.SomeCheck, async () => someCheckResult);
@@ -70,15 +79,15 @@ ThreadManager.runApp(async () => {
     // Регистрируем сервис проверок здоровья.
     GrpcHealthChecks.mapService(server);
     
-    server.bindAsync('0.0.0.0:4001', ServerCredentials.createInsecure(), () => {
+    server.bindAsync(serverAddress, ServerCredentials.createInsecure(), () => {
         server.start();
-        console.log('server is running on 0.0.0.0:4001');
+        console.log(`server is running on ${serverAddress}`);
     
         // Запускаем цикл проверок.
         GrpcHealthChecks.startLoop();
 
         // Запускаем ARP клиент.
-        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpIntegrationClientArgs("127.0.0.1:3000", "Core"));
+        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpIntegrationClientArgs(coreAddress, CORE_SERVICE_ID));
 
         // Запускаем тестовую задачу на процессе.
         threadMap.get(ThreadIds.Test)!.runTask(TaskIds.Test, null!);

@@ -7,7 +7,7 @@ export class TestTask implements IThreadTask {
     private _arpHandler = new ArpIntegrationHandler();
 
     async perform(context: IThreadTaskContext, args: any): Promise<void> {
-        this._arpHandler.initialize(new ArpTaskIntegrationArgs(context.sendMessage, context.hasMessagePort));
+        this._arpHandler.initialize(new ArpTaskIntegrationArgs(context.sendMessage.bind(context), context.hasMessagePort.bind(context)));
 
         this._arpHandler.collection.onStatusChanged.on(args => {
             console.log(`  [Test Process] Service status changed: ${args.serviceId} - ${args.status}`);
