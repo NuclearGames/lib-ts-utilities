@@ -1,4 +1,4 @@
-import { ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
+import { ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
 import { ServiceStatusCollection } from "./service-status-collection";
 import { ArpIntegration } from "./arp-integration";
 import { ArpTaskIntegrationArgs } from "./arp-integration-common";
@@ -7,7 +7,12 @@ import { ArpTaskIntegrationArgs } from "./arp-integration-common";
  * Точка доступа к ARP, для всех процессов, на которых нет ARP клиента.
  */
 export class ArpIntegrationHandler {
-    private readonly _collection : ServiceStatusCollection = new ServiceStatusCollection();
+    private readonly _collection : ServiceStatusCollection;
+
+    constructor() {
+        const services = ArpIntegration.getOptions().threadRequiredServicesMap.get(ThreadManager.getThreadId())!;
+        this._collection = new ServiceStatusCollection(services);
+    }
 
     /** Возвращает коллекцию. Коллеция не меняется - можно кэшировать в других местах. */
     public get collection() : ServiceStatusCollection {

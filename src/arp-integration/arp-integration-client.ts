@@ -23,7 +23,12 @@ export class ArpIntegrationClient {
     private _args: ArpTaskIntegrationArgs;
     private _clientArgs: ArpIntegrationClientArgs;
     private _client: ArpClient;
-    private _collection : ServiceStatusCollection = new ServiceStatusCollection();
+    private readonly _collection : ServiceStatusCollection;
+
+    constructor() {
+        const services = this.getAllRequiredServicesArray();
+        this._collection = new ServiceStatusCollection(new Set<string>(services));
+    }
 
     public get collection() : ServiceStatusCollection {
         return this._collection;
@@ -97,7 +102,9 @@ export class ArpIntegrationClient {
         console.log(` HealthStateSubscribe: ${response.getId()} - ${response.getStatus()}`);
 
         // Устанавилваем значение в коллекцию.
-        this._collection.setStatus(response.getId(), response.getStatus());
+        if(this.collection.contains(response.getId())) {
+            this._collection.setStatus(response.getId(), response.getStatus());
+        }
 
         // Формируем сообщение для рассылки.
         const messageArgs = new ArpServiceStatusChangeArgs(
@@ -141,6 +148,5 @@ export class ArpIntegrationClient {
         if (message.code == ArpIntegration.getOptions().getCurrentStatusesMessageCode) {
             this.sendStatuses(message.senderThreadId);
         }
-        console.log(`    [${ThreadManager.getThreadId()}] Got message from ${message.senderThreadId}. Code: ${message.code}; Args: ${message.args}`);
     }
 }

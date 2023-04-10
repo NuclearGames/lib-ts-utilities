@@ -7,7 +7,7 @@ import { ArpIntegrationClient, ArpIntegrationClientArgs } from "./arp-integratio
 import { ArpIntegration, ArpOptions } from "./arp-integration/arp-integration";
 import { LockBoxConfigurator, LockBoxConfiguratorOptions, LockBoxConfiguratorUtilities } from "@nucleargames/yandex-cloud-lockbox-lib";
 import { TestTask } from "./__example__/test-task"
-import { ArpServiceMapSettings } from "./arp-integration/arp-service-host-map";
+import { ArpServiceMapSettings } from "./arp-integration/arp-service-map-settings";
 
 // Название этого сервиса.
 const SERVICE_ID = "IncomeDbGateway";
@@ -87,7 +87,7 @@ ThreadManager.runApp(async () => {
         GrpcHealthChecks.startLoop();
 
         // Запускаем ARP клиент.
-        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpIntegrationClientArgs(coreAddress, CORE_SERVICE_ID));
+        threadMap.get(ThreadIds.ArpClient)!.runTask(TaskIds.ArpClient, new ArpIntegrationClientArgs(coreAddress, SERVICE_ID));
 
         // Запускаем тестовую задачу на процессе.
         threadMap.get(ThreadIds.Test)!.runTask(TaskIds.Test, null!);

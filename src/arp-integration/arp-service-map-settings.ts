@@ -26,7 +26,7 @@ export class ArpServiceMapSettings {
     public getRequiredServiceHost(serviceId: string) : string {
         const address = this._map.get(serviceId);
         if(!address) {
-            throw new Error(`Service ${serviceId} not found.`);
+            throw new Error(`Service '${serviceId}' not found.`);
         }
         return address;
     }

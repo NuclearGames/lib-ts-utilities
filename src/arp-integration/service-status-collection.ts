@@ -14,13 +14,10 @@ export class ServiceStatusCollection {
     private readonly _onStatusChanged = new EventSrc<ServiceStatusChangeEvent>;
     private readonly _statusMap = new Map<string, ArpServiceStatus>;
 
-    constructor() {
+    constructor(services: Set<string>) {
         // Ставим требуемым сервисам значение по умолчанию.
-        const services = ArpIntegration.getOptions().threadRequiredServicesMap.get(ThreadManager.getThreadId());
-        if(services) {  
-            for (const service of services) {
-                this._statusMap.set(service, ArpServiceStatus.NOTSERVING);
-            }
+        for (const service of services) {
+            this._statusMap.set(service, ArpServiceStatus.NOTSERVING);
         }
     }
 
@@ -29,15 +26,20 @@ export class ServiceStatusCollection {
         return this._onStatusChanged.expose();
     }
 
+    /** Есть ли сервис с указанным идентификатором. */
+    public contains(serviceId: string): boolean {
+        return this._statusMap.has(serviceId);
+    }
+
     /**
      * Возвращает статус сервиса.
      * Если сервиса нет в списке - возвращает ServiceUnknown.
      * @param serviceId 
      * @returns 
      */
-    public getStatus(serviceId : string) {
+    public getStatus(serviceId: string) {
         let status = this._statusMap.get(serviceId);
-        if(!status) {
+        if (!status) {
             status = ArpServiceStatus.SERVICEUNKNOWN;
         }
         return status;
@@ -51,13 +53,14 @@ export class ServiceStatusCollection {
      */
     public setStatus(serviceId: string, status: ArpServiceStatus) {
         const oldStatus = this._statusMap.get(serviceId);
-        if(!oldStatus) {
-            throw new Error(`Service ${serviceId} not found.`);
+        if (!oldStatus) {
+            throw new Error(`Status for service '${serviceId}' not found.`);
         }
         if (oldStatus != status) {
             this._statusMap.set(serviceId, status);
             this._onStatusChanged.invoke(new ServiceStatusChangeEvent(serviceId, status));
         }
+        console.log(` [${ThreadManager.getThreadId()}] Set service status: ${serviceId} - ${status}`);
     }
 
     /**
@@ -65,7 +68,7 @@ export class ServiceStatusCollection {
      * @param message 
      */
     public updateFromMessage(message: ArpServiceStatusChangeArgs): void {
-        this._statusMap.set(message.serviceId, message.status);
+        this.setStatus(message.serviceId, message.status);
     }
 
     /**

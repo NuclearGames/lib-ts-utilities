@@ -1,11 +1,9 @@
 import { IThreadTask } from "@nucleargames/lib-ts-multiprocess";
 import { IThreadTaskContext, ThreadMessage } from "@nucleargames/lib-ts-multiprocess/lib/thread-system/thread-common";
-import { ServiceStatusCollection } from "../arp-integration/service-status-collection";
 import { ArpIntegrationClient } from "../arp-integration/arp-integration-client";
 import { ArpTaskIntegrationArgs } from "../arp-integration/arp-integration-common";
 
 export class TestArpTask implements IThreadTask {
-    private _serviceCollection = new ServiceStatusCollection();
     private _arpClient = new ArpIntegrationClient();
 
     async perform(context: IThreadTaskContext, args: any): Promise<void> {
@@ -17,7 +15,7 @@ export class TestArpTask implements IThreadTask {
     }
 
     onMessage(message: ThreadMessage): void {
-        this._serviceCollection.tryUpdateFromMessage(message);
+        this._arpClient.onMessage(message);
     }
 
 }
