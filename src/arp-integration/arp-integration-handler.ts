@@ -10,6 +10,8 @@ export class ArpIntegrationHandler {
     private readonly _collection : ServiceStatusCollection;
 
     constructor() {
+        // Создаем колекцию состояний сервисов.
+        // Назначаем только те сервисы, которые интересны текущему процессу.
         const services = ArpIntegration.getOptions().threadRequiredServicesMap.get(ThreadManager.getThreadId())!;
         this._collection = new ServiceStatusCollection(services);
     }

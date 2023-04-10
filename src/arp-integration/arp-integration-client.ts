@@ -7,7 +7,9 @@ import { ArpServiceStatusChangeArgs, ArpTaskIntegrationArgs } from "./arp-integr
 
 export class ArpIntegrationClientArgs {
     constructor(
+        /** Адрес Core сервиса. */
         public readonly coreAddress: string,
+        /** Идентификатор этого сервиса. */
         public readonly serviceId: string
     ) { }
 }
@@ -17,7 +19,9 @@ export class ArpIntegrationClientArgs {
  * Отправляет WakeUpNotify.
  * Подписывается на HealthStateSubscribe, 
  * передает полученные данные другим процессам согласно таблице из настроек.
- * Не отправляет начальные состояния - только изменения, пришедшие по сети.
+ * 
+ * При получении запроса актуальных сотояний - отправляет запрашивающему процессу все данные согласно таблице.
+ * 
  */
 export class ArpIntegrationClient {
     private _args: ArpTaskIntegrationArgs;
@@ -26,14 +30,24 @@ export class ArpIntegrationClient {
     private readonly _collection : ServiceStatusCollection;
 
     constructor() {
+        // Создаем коллекцию статусов сервисов.
+        // В этой коллекции лежат все сервисы, которые используются процессами.
         const services = this.getAllRequiredServicesArray();
         this._collection = new ServiceStatusCollection(new Set<string>(services));
     }
 
+    /** Возвращает коллекцию. Коллеция не меняется - можно кэшировать в других местах. */
     public get collection() : ServiceStatusCollection {
         return this._collection;
     }
 
+    /**
+     * Запуск ARP клиента.
+     * Выполняет WakeUpNotify и HealthStateSubscribe.
+     * Await-ится пока не завершится поток HealthStateSubscribe.
+     * @param args 
+     * @param clientArgs 
+     */
     public async perform(args: ArpTaskIntegrationArgs, clientArgs: ArpIntegrationClientArgs): Promise<void> {
         this._args = args;
         this._clientArgs = clientArgs;
@@ -98,6 +112,7 @@ export class ArpIntegrationClient {
         return array;
     }
 
+    /** При получении новых данных по HealthStateSubscribe стриму. */
     private onHealthStateSubscribeReceive(response: ArpHealthStateSubscribeResponse): void {
         console.log(` HealthStateSubscribe: ${response.getId()} - ${response.getStatus()}`);
 
@@ -122,6 +137,7 @@ export class ArpIntegrationClient {
         }
     }
 
+    /** Отправляет актульные состояния сервисов указанному процессу. */
     private sendStatuses(threadId: number) {
         // Себе не отправляем.
         if(ThreadManager.getThreadId() == threadId) {
@@ -145,6 +161,7 @@ export class ArpIntegrationClient {
     }
 
     public onMessage(message: ThreadMessage): void {
+        // Если получили запрос на отправку акутальных состояний, отправляем.
         if (message.code == ArpIntegration.getOptions().getCurrentStatusesMessageCode) {
             this.sendStatuses(message.senderThreadId);
         }

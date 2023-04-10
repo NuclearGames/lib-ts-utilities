@@ -1,7 +1,7 @@
 //export * from "./grpc-health-checks/gprc-health-checks"
 
 import { Server, ServerCredentials } from "@grpc/grpc-js";
-import { GrpcHealthChecks, HealthResult } from "./grpc-health-checks/gprc-health-checks";
+import { GrpcHealthChecks } from "./grpc-health-checks/gprc-health-checks";
 import { ThreadManager } from "@nucleargames/lib-ts-multiprocess";
 import { ArpIntegrationClient, ArpIntegrationClientArgs } from "./arp-integration/arp-integration-client";
 import { ArpIntegration, ArpOptions } from "./arp-integration/arp-integration";
@@ -11,6 +11,7 @@ import { ArpServiceMapSettings } from "./arp-integration/arp-service-map-setting
 
 // Название этого сервиса.
 const SERVICE_ID = "IncomeDbGateway";
+// Название Core сервиса.
 const CORE_SERVICE_ID = "Core";
 
 export enum ThreadIds {
@@ -60,19 +61,17 @@ ThreadManager.runApp(async () => {
         ThreadManager.createMessageChannel(threadMap.get(ThreadIds.ArpClient)!, threadMap.get(ThreadIds.Test)!)
     ]);
    
-    // Качаем лутбокс.
+    // Качаем лутбокс и создаем словарь адресов сервисов.
     LockBoxConfigurator.useOptions(new LockBoxConfiguratorOptions("WarplaneMM", "-"));
     await LockBoxConfiguratorUtilities.configureYandexCloudSecretsDefault("./.secrets/example.appsettings.json");
     const serviceAddressMap = new ArpServiceMapSettings(LockBoxConfigurator.getSectionEntriesMap("ServiceMap"));
+
+    // Достаем адреса этого сервиса и Core.
     const serverAddress = serviceAddressMap.getRequiredServiceHost(SERVICE_ID)!;
     const coreAddress = serviceAddressMap.getRequiredServiceHost(CORE_SERVICE_ID)!;
 
     // Добавляем проверки.
     GrpcHealthChecks.setHealthCheck(HealthChecksIds.SomeCheck, async () => someCheckResult);
-    GrpcHealthChecks.setHealthCheck(HealthChecksIds.AnotherCheck, async () => true, new Set(["tag1", "tag2"]));
-    
-    // Добавляем сервисы (опционально; сервис по умолчанию итак использует все проверки).
-    GrpcHealthChecks.setServiceCheckFilter("testS", (r : HealthResult) => true);
     
     const server = new Server();
     
@@ -83,7 +82,7 @@ ThreadManager.runApp(async () => {
         server.start();
         console.log(`server is running on ${serverAddress}`);
     
-        // Запускаем цикл проверок.
+        // Запускаем цикл проверок здоровья.
         GrpcHealthChecks.startLoop();
 
         // Запускаем ARP клиент.
@@ -100,6 +99,7 @@ ThreadManager.runApp(async () => {
 
 
 // Для теста хелс чеков.
+// По хорошему не надо оставлять вне функции внутри runApp то, что не относится к подпроцессам.
 
 let someCheckResult = true;
 

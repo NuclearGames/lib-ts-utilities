@@ -1,8 +1,9 @@
 import { ArpServiceStatus } from "@nucleargames/lib-warplane-mm-arp-proto"
-import { EventSrc, IEvent, ThreadManager, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
+import { EventSrc, IEvent, ThreadMessage } from "@nucleargames/lib-ts-multiprocess";
 import { ArpIntegration } from "./arp-integration";
 import { ArpServiceStatusChangeArgs } from "./arp-integration-common";
 
+/** Аргументы события изменения состояния сервиса. */
 export class ServiceStatusChangeEvent {
     constructor(
         public readonly serviceId: string,
@@ -10,6 +11,12 @@ export class ServiceStatusChangeEvent {
     ) { }
 }
 
+/**
+ * Коллекция состояний сервисов.
+ * Принимает в конструктор набор сервисов, с которыми будет работать.
+ * Для них по умолчанию устанавливается статус NotServing.
+ * Все остальные сервисы считаются ServiceUnknown.
+ */
 export class ServiceStatusCollection {
     private readonly _onStatusChanged = new EventSrc<ServiceStatusChangeEvent>;
     private readonly _statusMap = new Map<string, ArpServiceStatus>;
@@ -59,8 +66,8 @@ export class ServiceStatusCollection {
         if (oldStatus != status) {
             this._statusMap.set(serviceId, status);
             this._onStatusChanged.invoke(new ServiceStatusChangeEvent(serviceId, status));
+            //console.log(` [${ThreadManager.getThreadId()}] Set service status: ${serviceId} - ${status}`);
         }
-        console.log(` [${ThreadManager.getThreadId()}] Set service status: ${serviceId} - ${status}`);
     }
 
     /**
