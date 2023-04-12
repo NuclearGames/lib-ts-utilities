@@ -37,4 +37,4 @@ jobs:
 
     env:
       NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      GITHUB_REGISTRY_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      GITHUB_REGISTRY_TOKEN: ${{secrets.NUGET_NUCLEARGAMES_TOKEN}}
