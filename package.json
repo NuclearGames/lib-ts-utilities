@@ -1,6 +1,6 @@
 {
   "name": "@nucleargames/lib-ts-utilities",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "lib/index.js",
   "repository": {
@@ -21,6 +21,9 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.8.13",
+    "@nucleargames/lib-ts-multiprocess": "^1.0.3",
+    "@nucleargames/lib-warplane-mm-arp-proto": "^1.0.1",
+    "@nucleargames/yandex-cloud-lockbox-lib": "^1.1.2",
     "@types/google-protobuf": "^3.15.6",
     "@types/node": "^18.11.9"
   },

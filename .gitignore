@@ -109,3 +109,6 @@ dist
 # Generated proto except folder
 *src/proto/*
 !*src/proto/.gitkeep
+
+.secrets/
+**/.idea/
