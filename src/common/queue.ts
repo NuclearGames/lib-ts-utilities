@@ -9,7 +9,7 @@ export class Queue<T> {
         return this._items.length;
     }
 
-    public getItems() : T[] {
+    public getItems() : ReadonlyArray<T> {
         return this._items;
     }
 

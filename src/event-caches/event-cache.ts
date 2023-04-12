@@ -1,4 +1,4 @@
-import { Queue } from "src/common/queue";
+import { Queue } from "../common/queue";
 
 export class EventCacheItem {
     constructor(
@@ -8,7 +8,7 @@ export class EventCacheItem {
 }
 
 export class EventCache {
-    private readonly _map: Map<string, Queue<any>>;
+    private readonly _map = new Map<string, Queue<any>>();
 
     public enqueue(serviceId : string, item: EventCacheItem) {
         let queue = this._map.get(serviceId);
