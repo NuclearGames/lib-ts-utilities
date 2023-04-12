@@ -1,0 +1,40 @@
+name: Node.js Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: read
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        registry-url: https://npm.pkg.github.com/
+      if: ${{ success() }}
+
+    - name: Prepare
+      run: npm ci
+
+    - name: Test
+      run: npm run test
+
+    env:
+      NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      GITHUB_REGISTRY_TOKEN: ${{secrets.GITHUB_TOKEN}}
